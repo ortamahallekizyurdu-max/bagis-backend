@@ -8,12 +8,17 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.get("/bagis", (req, res) => {
+  res.send("bagis endpoint ayakta");
+});
+
 app.get("/", (req, res) => {
   res.send("OK");
 });
 
 const auth = new google.auth.GoogleAuth({
-  keyFile: "service-account.json",
+  credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
@@ -29,17 +34,15 @@ app.post("/bagis", async (req, res) => {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.SHEET_ID,
-      range: "A1",
+      range: "A:D",
       valueInputOption: "USER_ENTERED",
       requestBody: {
-        values: [
-          [
-            new Date().toLocaleString("tr-TR"),
-            ad,
-            tutar,
-            aciklama || ""
-          ]
-        ],
+        values: [[
+          new Date().toLocaleString("tr-TR"),
+          ad,
+          tutar,
+          aciklama || ""
+        ]],
       },
     });
 
@@ -49,8 +52,9 @@ app.post("/bagis", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+const PORT = process.env.PORT;
 
-app.listen(process.env.PORT || 4000, () => {
-  console.log("🚀 Backend çalışıyor");
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("🚀 Backend çalışıyor:", PORT);
 });
 
