@@ -8,6 +8,9 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.get("/", (req, res) => {
+  res.send("OK");
+});
 
 const auth = new google.auth.GoogleAuth({
   keyFile: "service-account.json",
@@ -47,6 +50,7 @@ app.post("/bagis", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("🚀 Backend çalışıyor: http://localhost:3000");
+app.listen(process.env.PORT || 4000, () => {
+  console.log("🚀 Backend çalışıyor");
 });
+
