@@ -1,4 +1,4 @@
-console.log("RAMAZAN TEST 123");
+console.log("SPREADSHEET_ID:", process.env.SPREADSHEET_ID);
 
 import express from "express";
 import cors from "cors";
