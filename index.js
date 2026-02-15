@@ -2,8 +2,8 @@ console.log("RAMAZAN TEST 123");
 
 import express from "express";
 import cors from "cors";
-import { google } from "googleapis";
 import dotenv from "dotenv";
+import { google } from "googleapis";
 
 dotenv.config();
 
@@ -11,52 +11,126 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/bagis", (req, res) => {
-  res.send("bagis endpoint ayakta");
-});
-
-app.get("/", (req, res) => {
-  res.send("OK");
-});
-
 const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
+  keyFile: "./service-account.json",
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
 const sheets = google.sheets({ version: "v4", auth });
 
-app.post("/bagis", async (req, res) => {
-  try {
-    const { ad, tutar, aciklama } = req.body;
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
-    if (!ad || !tutar) {
-      return res.status(400).json({ error: "Zorunlu alan eksik" });
-    }
+/* ROOT */
+app.get("/", (req, res) => {
+  res.send("Server OK");
+});
+
+/* BAĞIŞ EKLE */
+app.post("/bagislar", async (req, res) => {
+  try {
+    const {
+      tarih,
+      yardimAlan,
+      bagisNevi,
+      makbuzNo,
+      dernekAdi,
+      odemeCinsi,
+      bagisYapan,
+      tutar,
+    } = req.body;
 
     await sheets.spreadsheets.values.append({
-      spreadsheetId: process.env.SHEET_ID,
-      range: "A:D",
-      valueInputOption: "USER_ENTERED",
-      requestBody: {
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Sayfa1!A1`,
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      resource: {
         values: [[
-          new Date().toLocaleString("tr-TR"),
-          ad,
+          tarih,
+          yardimAlan,
+          bagisNevi,
+          makbuzNo,
+          dernekAdi,
+          odemeCinsi,
           tutar,
-          aciklama || ""
-        ]],
-      },
+          bagisYapan
+        ]]
+      }
     });
 
-    res.json({ success: true });
+    res.json({ ok: true });
   } catch (err) {
-    console.error("GOOGLE SHEETS ERROR:", err);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Bağış eklenemedi" });
   }
 });
-const PORT = process.env.PORT;
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("🚀 Backend çalışıyor:", PORT);
+/* BAĞIŞLAR */
+app.get("/bagislar", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Sayfa1!A:H`
+    });
+
+    const rows = r.data.values || [];
+    res.json(rows.slice(1));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Veri alınamadı" });
+  }
 });
 
+/* HEDEFLER */
+app.get("/hedefler", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Sayfa2!A2:B`
+    });
+
+    const rows = r.data.values || [];
+
+    res.json(
+      rows.map((row, index) => ({
+        id: index + 1,
+        yardimAlan: row[0],
+        hedef: Number(row[1]) || 0
+      }))
+    );
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Hedefler alınamadı" });
+  }
+});
+
+/* DUYURULAR */
+app.get("/duyurular", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Sayfa3!A2:B`
+    });
+
+    const rows = r.data.values || [];
+
+    res.json(
+      rows.map((row, index) => ({
+        id: index + 1,
+        baslik: row[0],
+        mesaj: row[1]
+      }))
+    );
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Duyurular alınamadı" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("🚀 Arka uç çalışıyor:", PORT);
+});
