@@ -16,7 +16,6 @@ const auth = new google.auth.GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/spreadsheets"]
 });
 
-
 const sheets = google.sheets({ version: "v4", auth });
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
@@ -127,6 +126,25 @@ app.get("/duyurular", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Duyurular alınamadı" });
+  }
+});
+
+/* HİZMET EHLİ */
+app.get("/hizmet-ehli", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Sayfa2!A2:A`
+    });
+
+    const rows = r.data.values || [];
+    const isimler = rows.map(row => row[0]).filter(Boolean);
+
+    res.json(isimler);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "İsimler alınamadı" });
   }
 });
 
