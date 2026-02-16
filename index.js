@@ -6,13 +6,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* SERVICE ACCOUNT DOSYASINI OKU */
-const serviceAccount = JSON.parse(
-  process.env.GOOGLE_SERVICE_ACCOUNT
-);
+/* SERVICE ACCOUNT ENV'DEN OKU */
+if (!process.env.GOOGLE_SERVICE_ACCOUNT) {
+  console.error("GOOGLE_SERVICE_ACCOUNT TANIMLI DEĞİL!");
+  process.exit(1);
+}
 
+const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 
-/* SHEET ID BURAYA YAZ */
+/* SHEET ID */
 const SPREADSHEET_ID = "1TLELlXiZVlT9wacbbCKXM6gJkjzsj4C18ls8HzOmsI8";
 
 /* GOOGLE AUTH */
@@ -33,7 +35,7 @@ app.get("/hizmet-ehli", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `Sayfa2!A2:A`
+      range: "Sayfa2!A2:A"
     });
 
     const rows = r.data.values || [];
@@ -54,7 +56,7 @@ app.get("/gunluk/:isim", async (req, res) => {
 
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `Sayfa1!A2:H`
+      range: "Sayfa1!A2:H"
     });
 
     const rows = r.data.values || [];
@@ -70,13 +72,23 @@ app.get("/gunluk/:isim", async (req, res) => {
       String(row[1]).trim() === isim.trim()
     );
 
+    const neviToplam = {};
+
+    filtreli.forEach(row => {
+      const nevi = row[2];
+      const tutar = Number(row[6]) || 0;
+
+      if (!neviToplam[nevi]) neviToplam[nevi] = 0;
+      neviToplam[nevi] += tutar;
+    });
+
     res.json(neviToplam);
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Günlük veri alınamadı" });
   }
-});   // ⬅️ BU KAPATMA EKSİKTİ
+});
 
 /* SERVER START */
 const PORT = process.env.PORT || 3000;
@@ -84,4 +96,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("🚀 Server çalışıyor");
 });
-
