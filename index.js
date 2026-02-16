@@ -29,6 +29,13 @@ const sheets = google.sheets({ version: "v4", auth });
 app.get("/", (req, res) => {
   res.send("Server OK");
 });
+app.get("/hedefler", (req, res) => {
+  res.json([
+    { yardimAlan: "Ahmet", hedef: 10000 },
+    { yardimAlan: "Mehmet", hedef: 20000 },
+    { yardimAlan: "Fatma", hedef: 15000 }
+  ]);
+});
 
 /* HİZMET EHLİ */
 app.get("/hizmet-ehli", async (req, res) => {
