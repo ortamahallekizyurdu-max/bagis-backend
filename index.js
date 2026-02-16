@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import { google } from "googleapis";
-import fs from "fs";
 
 const app = express();
 app.use(cors());
@@ -9,8 +8,9 @@ app.use(express.json());
 
 /* SERVICE ACCOUNT DOSYASINI OKU */
 const serviceAccount = JSON.parse(
-  fs.readFileSync("./service-account.json", "utf8")
+  process.env.GOOGLE_SERVICE_ACCOUNT
 );
+
 
 /* SHEET ID BURAYA YAZ */
 const SPREADSHEET_ID = "1TLELlXiZVlT9wacbbCKXM6gJkjzsj4C18ls8HzOmsI8";
