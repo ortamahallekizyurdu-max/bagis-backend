@@ -113,6 +113,30 @@ app.get("/duyurular", async (req, res) => {
   }
 });
 
+/* DASHBOARD VERİ */
+app.get("/dashboard", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sayfa4!A2:H"
+    });
+
+    const rows = r.data.values || [];
+
+    const sonuc = rows.map(row => ({
+      tarih: row[0] || "",
+      isim: row[1] || "",
+      nevi: row[2] || "",
+      tutar: Number(row[6]) || 0
+    }));
+
+    res.json(sonuc);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Dashboard verisi alınamadı" });
+  }
+});
 
 
 /* SERVER START */
