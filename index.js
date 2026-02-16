@@ -82,11 +82,13 @@ app.get("/gunluk/:isim", async (req, res) => {
 
     res.json(neviToplam);
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Günlük veri alınamadı" });
-  }
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("🚀 Server çalışıyor");
 });
+
+
 
 app.listen(3000, () => {
   console.log("🚀 Server çalışıyor: http://localhost:3000");
