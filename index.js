@@ -90,6 +90,30 @@ app.get("/gunluk/:isim", async (req, res) => {
   }
 });
 
+/* DUYURULAR */
+app.get("/duyurular", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sayfa3!A2:B"
+    });
+
+    const rows = r.data.values || [];
+
+    const duyurular = rows.map(row => ({
+      baslik: row[0],
+      icerik: row[1]
+    }));
+
+    res.json(duyurular);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Duyurular alınamadı" });
+  }
+});
+
+
 /* SERVER START */
 const PORT = process.env.PORT || 3000;
 
