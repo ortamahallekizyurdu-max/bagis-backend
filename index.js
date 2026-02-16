@@ -70,26 +70,18 @@ app.get("/gunluk/:isim", async (req, res) => {
       String(row[1]).trim() === isim.trim()
     );
 
-    const neviToplam = {};
-
-    filtreli.forEach(row => {
-      const nevi = row[2];
-      const tutar = Number(row[6]) || 0;
-
-      if (!neviToplam[nevi]) neviToplam[nevi] = 0;
-      neviToplam[nevi] += tutar;
-    });
-
     res.json(neviToplam);
 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Günlük veri alınamadı" });
+  }
+});   // ⬅️ BU KAPATMA EKSİKTİ
+
+/* SERVER START */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("🚀 Server çalışıyor");
 });
 
-
-
-app.listen(3000, () => {
-  console.log("🚀 Server çalışıyor: http://localhost:3000");
-});
