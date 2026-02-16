@@ -101,8 +101,8 @@ app.get("/duyurular", async (req, res) => {
     const rows = r.data.values || [];
 
     const duyurular = rows.map(row => ({
-      baslik: row[0],
-      icerik: row[1]
+      duyuru: row[0] || "",
+      mesaj: row[1] || ""
     }));
 
     res.json(duyurular);
@@ -112,6 +112,7 @@ app.get("/duyurular", async (req, res) => {
     res.status(500).json({ error: "Duyurular alınamadı" });
   }
 });
+
 
 
 /* SERVER START */
