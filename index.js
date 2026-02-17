@@ -69,8 +69,7 @@ app.get("/gunluk/:isim", async (req, res) => {
     const bugun = `${gun}.${ay}.${yil}`;
 
     const filtreli = rows.filter(row =>
-      String(row[0]).trim() === bugun &&
-      String(row[1]).trim() === isim.trim()
+      String(row[4]).trim() === isim.trim()
     );
 
     const neviToplam = {};
