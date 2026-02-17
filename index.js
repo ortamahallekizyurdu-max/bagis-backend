@@ -92,39 +92,43 @@ app.get("/gunluk/:isim", async (req, res) => {
 });
 
 /* BAĞIŞ EKLE */
+
 app.post("/bagislar", async (req, res) => {
   try {
-    console.log("BODY GELDİ:", req.body);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Bağış eklenemedi" });
-  }
-});
-
-   await sheets.spreadsheets.values.append({
-  spreadsheetId: SPREADSHEET_ID,
-  range: `Sayfa1!A1`,
-  valueInputOption: "RAW",
-  insertDataOption: "INSERT_ROWS",
-  resource: {
-    values: [[
+    const {
       tarih,
-      bagisYapan,
+      yardimAlan,
       bagisNevi,
       makbuzNo,
-      yardimAlan,
+      dernekAdi,
       odemeCinsi,
+      bagisYapan,
       tutar,
-      dernekAdi
-    ]]
-  }
-});
+    } = req.body;
 
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Sayfa1!A1`,
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      resource: {
+        values: [[
+          tarih,
+          bagisYapan,
+          bagisNevi,
+          makbuzNo,
+          yardimAlan,
+          odemeCinsi,
+          tutar,
+          dernekAdi
+        ]]
+      }
+    });
 
     res.json({ ok: true });
+
   } catch (err) {
-    console.error(err);
+    console.error("POST HATA:", err);
     res.status(500).json({ error: "Bağış eklenemedi" });
   }
 });
