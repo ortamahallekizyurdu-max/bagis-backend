@@ -75,21 +75,18 @@ app.get("/gunluk/:isim", async (req, res) => {
       String(row[1]).trim() === isim.trim()
     );
 
-    const neviToplam = {};
-    let genelToplam = 0;
+   const neviToplam = {};
 
-    filtreli.forEach(row => {
-      const nevi = row[2];       // C sütunu
-      const tutar = Number(row[6]) || 0;  // G sütunu
+filtreli.forEach(row => {
+  const nevi = row[2];
+  const tutar = Number(row[6]) || 0;
 
-      if (!neviToplam[nevi]) neviToplam[nevi] = 0;
-      neviToplam[nevi] += tutar;
-      genelToplam += tutar;
-    });
+  if (!neviToplam[nevi]) neviToplam[nevi] = 0;
+  neviToplam[nevi] += tutar;
+});
 
-    neviToplam["TOPLAM"] = genelToplam;
+res.json(neviToplam);
 
-    res.json(neviToplam);
 
   } catch (err) {
     console.error(err);
