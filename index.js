@@ -69,20 +69,22 @@ app.get("/gunluk/:isim", async (req, res) => {
     const bugun = `${gun}.${ay}.${yil}`;
 
     const filtreli = rows.filter(row =>
-      String(row[4]).trim() === isim.trim()
-    );
+  String(row[0]).trim() === bugun &&
+  String(row[1]).trim() === isim.trim()
+);
 
-    const neviToplam = {};
+const neviToplam = {};
 
-    filtreli.forEach(row => {
-      const nevi = row[2];
-      const tutar = Number(row[6]) || 0;
+filtreli.forEach(row => {
+  const nevi = row[2];        // bağış nevi
+  const tutar = Number(row[6]) || 0;  // tutar
 
-      if (!neviToplam[nevi]) neviToplam[nevi] = 0;
-      neviToplam[nevi] += tutar;
-    });
+  if (!neviToplam[nevi]) neviToplam[nevi] = 0;
+  neviToplam[nevi] += tutar;
+});
 
-    res.json(neviToplam);
+res.json(neviToplam);
+
 
   } catch (err) {
     console.error(err);
@@ -112,15 +114,16 @@ app.post("/bagislar", async (req, res) => {
       insertDataOption: "INSERT_ROWS",
       resource: {
         values: [[
-          tarih,
-          bagisYapan,
-          bagisNevi,
-          makbuzNo,
-          yardimAlan,
-          odemeCinsi,
-          tutar,
-          dernekAdi
-        ]]
+  tarih,        // A
+  yardimAlan,   // B
+  bagisNevi,    // C
+  makbuzNo,     // D
+  dernekAdi,    // E
+  odemeCinsi,   // F
+  tutar,        // G
+  bagisYapan    // H
+]]
+
       }
     });
 
