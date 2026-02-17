@@ -29,13 +29,7 @@ const sheets = google.sheets({ version: "v4", auth });
 app.get("/", (req, res) => {
   res.send("Server OK");
 });
-app.get("/hedefler", (req, res) => {
-  res.json([
-    { yardimAlan: "Ahmet", hedef: 10000 },
-    { yardimAlan: "Mehmet", hedef: 20000 },
-    { yardimAlan: "Fatma", hedef: 15000 }
-  ]);
-});
+
 
 /* HİZMET EHLİ */
 app.get("/hizmet-ehli", async (req, res) => {
@@ -94,6 +88,83 @@ app.get("/gunluk/:isim", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Günlük veri alınamadı" });
+  }
+});
+
+/* BAĞIŞ EKLE */
+app.post("/bagislar", async (req, res) => {
+  try {
+    console.log("BODY GELDİ:", req.body);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Bağış eklenemedi" });
+  }
+});
+
+   await sheets.spreadsheets.values.append({
+  spreadsheetId: SPREADSHEET_ID,
+  range: `Sayfa1!A1`,
+  valueInputOption: "RAW",
+  insertDataOption: "INSERT_ROWS",
+  resource: {
+    values: [[
+      tarih,
+      bagisYapan,
+      bagisNevi,
+      makbuzNo,
+      yardimAlan,
+      odemeCinsi,
+      tutar,
+      dernekAdi
+    ]]
+  }
+});
+
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Bağış eklenemedi" });
+  }
+});
+
+/* BAĞIŞLAR */
+app.get("/bagislar", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Sayfa1!A:H`
+    });
+
+    const rows = r.data.values || [];
+    res.json(rows.slice(1));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Veri alınamadı" });
+  }
+});
+/* HEDEFLER */
+app.get("/hedefler", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Sayfa2!A2:B`
+    });
+
+    const rows = r.data.values || [];
+
+    res.json(
+      rows.map((row, index) => ({
+        id: index + 1,
+        yardimAlan: row[0],
+        hedef: Number(row[1]) || 0
+      }))
+    );
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Hedefler alınamadı" });
   }
 });
 
