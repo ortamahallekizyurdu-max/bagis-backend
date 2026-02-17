@@ -51,6 +51,7 @@ app.get("/hizmet-ehli", async (req, res) => {
 });
 
 /* GÜNLÜK BAĞIŞ */
+
 app.get("/gunluk/:isim", async (req, res) => {
   try {
     const { isim } = req.params;
@@ -68,23 +69,27 @@ app.get("/gunluk/:isim", async (req, res) => {
     const yil = today.getFullYear();
     const bugun = `${gun}.${ay}.${yil}`;
 
+    // B sütunu = row[1]
     const filtreli = rows.filter(row =>
-  String(row[0]).trim() === bugun &&
-  String(row[1]).trim() === isim.trim()
-);
+      String(row[0]).trim() === bugun &&
+      String(row[1]).trim() === isim.trim()
+    );
 
-const neviToplam = {};
+    const neviToplam = {};
+    let genelToplam = 0;
 
-filtreli.forEach(row => {
-  const nevi = row[2];        // bağış nevi
-  const tutar = Number(row[6]) || 0;  // tutar
+    filtreli.forEach(row => {
+      const nevi = row[2];       // C sütunu
+      const tutar = Number(row[6]) || 0;  // G sütunu
 
-  if (!neviToplam[nevi]) neviToplam[nevi] = 0;
-  neviToplam[nevi] += tutar;
-});
+      if (!neviToplam[nevi]) neviToplam[nevi] = 0;
+      neviToplam[nevi] += tutar;
+      genelToplam += tutar;
+    });
 
-res.json(neviToplam);
+    neviToplam["TOPLAM"] = genelToplam;
 
+    res.json(neviToplam);
 
   } catch (err) {
     console.error(err);
