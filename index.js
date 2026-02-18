@@ -137,6 +137,29 @@ app.get("/dashboard", async (req, res) => {
   }
 });
 
+/* HEDEFLER */
+app.get("/hedefler", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sayfa2!A2:B"
+    });
+
+    const rows = r.data.values || [];
+
+    res.json(
+      rows.map((row, index) => ({
+        id: index + 1,
+        yardimAlan: row[0],
+        hedef: Number(row[1]) || 0
+      }))
+    );
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Hedefler alınamadı" });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
