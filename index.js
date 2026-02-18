@@ -63,29 +63,50 @@ app.get("/gunluk/:isim", async (req, res) => {
 
     const rows = r.data.values || [];
 
+    // BUGÜN (dd.MM.yyyy)
     const today = new Date();
     const gun = String(today.getDate()).padStart(2, "0");
     const ay = String(today.getMonth() + 1).padStart(2, "0");
     const yil = today.getFullYear();
     const bugun = `${gun}.${ay}.${yil}`;
 
-    // B sütunu = row[1]
-    const filtreli = rows.filter(row =>
-      String(row[0]).trim() === bugun &&
-      String(row[1]).trim() === isim.trim()
-    );
+    // Sheet'teki tarihi normalize et: 18/02/2026 -> 18.02.2026
+    const normTarih = (t) =>
+      String(t || "")
+        .trim()
+        .replace(/\//g, ".")
+        .replace(/-/g, "."); // olur da 18-02-2026 varsa
 
-   const neviToplam = {};
+    const norm = (x) => String(x || "").trim();
 
-filtreli.forEach(row => {
-  const nevi = row[2];
-  const tutar = Number(row[6]) || 0;
+    const filtreli = rows.filter((row) => {
+      const tarih = normTarih(row[0]); // A
+      const yardimAlan = norm(row[1]); // B
+      return tarih === bugun && yardimAlan === norm(isim);
+    });
 
-  if (!neviToplam[nevi]) neviToplam[nevi] = 0;
-  neviToplam[nevi] += tutar;
+    const sonuc = {};
+
+    filtreli.forEach((row) => {
+      const nevi = norm(row[2]); // C
+      const tutar = Number(String(row[6] || "0").replace(",", ".")) || 0; // G
+
+      if (!nevi) return;
+      if (!sonuc[nevi]) sonuc[nevi] = 0;
+      sonuc[nevi] += tutar;
+    });
+
+    res.json(sonuc);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Günlük veri alınamadı" });
+  }
 });
 
+neviToplam.TOPLAM = toplam;
+
 res.json(neviToplam);
+
 
 
   } catch (err) {
