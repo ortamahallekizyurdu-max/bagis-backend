@@ -79,11 +79,10 @@ app.get("/gunluk/:isim", async (req, res) => {
 
     const norm = (x) => String(x || "").trim();
 
-    const filtreli = rows.filter((row) => {
-      const tarih = normTarih(row[0]); // A
-      const yardimAlan = norm(row[1]); // B
-      return tarih === bugun && yardimAlan === norm(isim);
-    });
+   const filtreli = rows.filter(row =>
+  String(row[1]).trim() === isim.trim()
+);
+
 
     const sonuc = {};
 
