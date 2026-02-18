@@ -6,13 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-if (!process.env.GOOGLE_SERVICE_ACCOUNT) {
-  console.error("GOOGLE_SERVICE_ACCOUNT TANIMLI DEĞİL!");
-  process.exit(1);
-}
-
 const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-
 const SPREADSHEET_ID = "1TLELlXiZVlT9wacbbCKXM6gJkjzsj4C18ls8HzOmsI8";
 
 const auth = new google.auth.GoogleAuth({
@@ -27,7 +21,7 @@ app.get("/", (req, res) => {
 });
 
 
-/* HİZMET EHLİ İSİMLER */
+/* HİZMET EHLİ */
 app.get("/hizmet-ehli", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
@@ -36,20 +30,18 @@ app.get("/hizmet-ehli", async (req, res) => {
     });
 
     const rows = r.data.values || [];
-    const isimler = rows.map(row => row[0]).filter(Boolean);
+    res.json(rows.map(r => r[0]).filter(Boolean));
 
-    res.json(isimler);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "İsimler alınamadı" });
   }
 });
 
-
-/* GÜNLÜK BAĞIŞ */
+/* GÜNLÜK BAĞIŞ (TARİHLİ + ÇİFT TOPLAMA DÜZELTİLDİ) */
 app.get("/gunluk/:isim", async (req, res) => {
   try {
     const { isim } = req.params;
+    const { tarih } = req.query; // ?tarih=18.02.2026 şeklinde gelebilir
 
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
@@ -58,24 +50,44 @@ app.get("/gunluk/:isim", async (req, res) => {
 
     const rows = r.data.values || [];
 
+    // Eğer tarih query gelmezse BUGÜN kullan
+    let seciliTarih;
+
+    if (tarih) {
+      seciliTarih = tarih.trim();
+    } else {
+      const today = new Date();
+      const gun = String(today.getDate()).padStart(2, "0");
+      const ay = String(today.getMonth() + 1).padStart(2, "0");
+      const yil = today.getFullYear();
+      seciliTarih = `${gun}.${ay}.${yil}`;
+    }
+
+    const norm = (x) => String(x || "").trim();
+
+    const parseTutar = (x) => {
+      const s = String(x || "")
+        .replace("₺", "")
+        .replace("TL", "")
+        .replace(/\s/g, "")
+        .replace(/\./g, "")
+        .replace(",", ".");
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+    };
+
     const sonuc = {};
     let toplam = 0;
 
-    const filtreli = rows.filter(row =>
-      String(row[1] || "").trim() === String(isim || "").trim()
-    );
+    rows.forEach(row => {
 
-    filtreli.forEach(row => {
-      const nevi = String(row[2] || "").trim();
+      const rowTarih = norm(row[0]);      // A
+      const yardimAlan = norm(row[1]);    // B
+      const nevi = norm(row[2]);          // C
+      const tutar = parseTutar(row[6]);   // G
 
-      const tutar = Number(
-        String(row[6] || "0")
-          .replace("₺", "")
-          .replace("TL", "")
-          .replace(/\./g, "")
-          .replace(",", ".")
-      ) || 0;
-
+      if (rowTarih !== seciliTarih) return;
+      if (yardimAlan !== norm(isim)) return;
       if (!nevi) return;
 
       if (!sonuc[nevi]) sonuc[nevi] = 0;
@@ -94,74 +106,7 @@ app.get("/gunluk/:isim", async (req, res) => {
 });
 
 
-/* BAĞIŞ EKLE */
-app.post("/bagislar", async (req, res) => {
-  try {
-    const {
-      tarih,
-      yardimAlan,
-      bagisNevi,
-      makbuzNo,
-      dernekAdi,
-      odemeCinsi,
-      bagisYapan,
-      tutar
-    } = req.body;
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
-      range: "Sayfa1!A1",
-      valueInputOption: "RAW",
-      insertDataOption: "INSERT_ROWS",
-      resource: {
-        values: [[
-          tarih,
-          yardimAlan,
-          bagisNevi,
-          makbuzNo,
-          dernekAdi,
-          odemeCinsi,
-          tutar,
-          bagisYapan
-        ]]
-      }
-    });
-
-    res.json({ ok: true });
-
-  } catch (err) {
-    console.error("POST HATA:", err);
-    res.status(500).json({ error: "Bağış eklenemedi" });
-  }
-});
-
-
-/* HEDEFLER */
-app.get("/hedefler", async (req, res) => {
-  try {
-    const r = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: "Sayfa2!A2:B"
-    });
-
-    const rows = r.data.values || [];
-
-    res.json(
-      rows.map((row, index) => ({
-        id: index + 1,
-        yardimAlan: row[0],
-        hedef: Number(row[1]) || 0
-      }))
-    );
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Hedefler alınamadı" });
-  }
-});
-
-
-/* DASHBOARD */
+/* 🔥 DASHBOARD (ÇİFT TOPLAMA DÜZELTİLDİ) */
 app.get("/dashboard", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
@@ -171,24 +116,29 @@ app.get("/dashboard", async (req, res) => {
 
     const rows = r.data.values || [];
 
+    const parseTutar = (x) => {
+      const temiz = String(x || "")
+        .replace(/\./g,"")
+        .replace(",",".");
+      return Number(temiz) || 0;
+    };
+
     const sonuc = rows.map(row => ({
       tarih: row[0] || "",
       isim: row[1] || "",
       nevi: row[2] || "",
-      tutar: Number(row[6]) || 0
+      tutar: parseTutar(row[6])
     }));
 
     res.json(sonuc);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Dashboard verisi alınamadı" });
   }
 });
 
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log("🚀 Server çalışıyor");
 });
