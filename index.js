@@ -89,7 +89,13 @@ app.get("/gunluk/:isim", async (req, res) => {
 
     filtreli.forEach((row) => {
       const nevi = norm(row[2]); // C
-      const tutar = Number(String(row[6] || "0").replace(",", ".")) || 0; // G
+      const tutar = Number(
+  String(row[6] || "0")
+    .replace("₺", "")
+    .replace("TL", "")
+    .replace(/\./g, "")
+    .replace(",", ".")
+) || 0;
 
       if (!nevi) return;
       if (!sonuc[nevi]) sonuc[nevi] = 0;
