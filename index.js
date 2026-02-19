@@ -119,7 +119,7 @@ app.get("/dashboard", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: "Sayfa1!A2:H"
+      range: "Sayfa4!A2:H"
     });
 
     const rows = r.data.values || [];
@@ -144,6 +144,7 @@ app.get("/dashboard", async (req, res) => {
     res.status(500).json({ error: "Dashboard verisi alınamadı" });
   }
 });
+
 
 app.post("/bagislar", async (req, res) => {
   try {
