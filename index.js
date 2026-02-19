@@ -20,13 +20,49 @@ app.get("/", (req, res) => {
   res.send("Server OK");
 });
 
+app.get("/duyurular", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sayfa6!A2:A"
+    });
+
+    const rows = r.data.values || [];
+
+    res.json(
+      rows.map(row => ({
+        mesaj: row[0]
+      }))
+    );
+
+  } catch (err) {
+    res.status(500).json({ error: "Duyuru alınamadı" });
+  }
+});
+
+// 🔔 BİLDİRİM LİSTEYE EKLE
+const bugun = new Date().toLocaleDateString("tr-TR");
+
+const yeniBildirim = {
+  tarih: bugun,
+  isim: ad,
+  tutar: tutar
+};
+
+const eski = await AsyncStorage.getItem("BILDIRIM_LISTE");
+const liste = eski ? JSON.parse(eski) : [];
+
+liste.push(yeniBildirim);
+
+await AsyncStorage.setItem("BILDIRIM_LISTE", JSON.stringify(liste));
+
 
 /* HİZMET EHLİ */
 app.get("/hizmet-ehli", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: "Sayfa2!A2:A"
+      range: "Sayfa5!A2:A"
     });
 
     const rows = r.data.values || [];
