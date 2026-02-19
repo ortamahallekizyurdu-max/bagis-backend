@@ -76,28 +76,36 @@ app.get("/gunluk/:isim", async (req, res) => {
       return Number.isFinite(n) ? n : 0;
     };
 
-    const sonuc = {};
-    
+const sonuc = {};
 
-    rows.forEach(row => {
+rows.forEach(row => {
 
-      const rowTarih = norm(row[0]);      // A
-      const yardimAlan = norm(row[1]);    // B
-      const nevi = norm(row[2]);          // C
-      const tutar = parseTutar(row[6]);   // G
+  const rowTarih = norm(row[0]);
+  const yardimAlan = norm(row[1]);
+  const nevi = norm(row[2]);
+  const tutar = parseTutar(row[6]);
 
-      if (rowTarih !== seciliTarih) return;
-      if (yardimAlan !== norm(isim)) return;
-      if (!nevi) return;
+  if (rowTarih !== seciliTarih) return;
+  if (yardimAlan !== norm(isim)) return;
+  if (!nevi) return;
 
-      if (!sonuc[nevi]) sonuc[nevi] = 0;
-      sonuc[nevi] += tutar;
-      toplam += tutar;
-    });
+  if (!sonuc[nevi]) sonuc[nevi] = 0;
+  sonuc[nevi] += tutar;
+});
 
-    sonuc.TOPLAM = Object.values(sonuc).reduce((a, b) => a + b, 0);
+// TOPLAM güvenli hesaplama
+let toplam = 0;
 
-    res.json(sonuc);
+for (let key in sonuc) {
+  if (typeof sonuc[key] === "number") {
+    toplam += sonuc[key];
+  }
+}
+
+sonuc.TOPLAM = toplam;
+
+res.json(sonuc);
+
 
   } catch (err) {
     console.error(err);
