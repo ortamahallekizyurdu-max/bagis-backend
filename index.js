@@ -137,6 +137,46 @@ app.get("/dashboard", async (req, res) => {
   }
 });
 
+app.post("/bagislar", async (req, res) => {
+  try {
+    const {
+      tarih,
+      yardimAlan,
+      bagisNevi,
+      makbuzNo,
+      dernekAdi,
+      odemeCinsi,
+      tutar,
+      bagisYapan
+    } = req.body;
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sayfa1!A1",
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      resource: {
+        values: [[
+          tarih,
+          yardimAlan,
+          bagisNevi,
+          makbuzNo,
+          dernekAdi,
+          odemeCinsi,
+          tutar,
+          bagisYapan
+        ]]
+      }
+    });
+
+    res.json({ ok: true });
+
+  } catch (err) {
+    console.error("POST HATA:", err);
+    res.status(500).json({ error: "Bağış eklenemedi" });
+  }
+});
+
 /* HEDEFLER */
 app.get("/hedefler", async (req, res) => {
   try {
@@ -160,6 +200,11 @@ app.get("/hedefler", async (req, res) => {
     res.status(500).json({ error: "Hedefler alınamadı" });
   }
 });
+
+app.get("/bagislar", (req, res) => {
+  res.send("BAGISLAR ROUTE VAR");
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
