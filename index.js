@@ -201,10 +201,6 @@ app.get("/hedefler", async (req, res) => {
   }
 });
 
-app.get("/bagislar", (req, res) => {
-  res.send("BAGISLAR ROUTE VAR");
-});
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
