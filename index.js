@@ -77,7 +77,7 @@ app.get("/gunluk/:isim", async (req, res) => {
     };
 
     const sonuc = {};
-    let toplam = 0;
+    
 
     rows.forEach(row => {
 
@@ -95,7 +95,7 @@ app.get("/gunluk/:isim", async (req, res) => {
       toplam += tutar;
     });
 
-    sonuc.TOPLAM = toplam;
+    sonuc.TOPLAM = Object.values(sonuc).reduce((a, b) => a + b, 0);
 
     res.json(sonuc);
 
