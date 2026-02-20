@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
   res.send("Server OK");
 });
 
+/* DUYURULAR */
 app.get("/duyurular", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
@@ -40,18 +41,6 @@ app.get("/duyurular", async (req, res) => {
   }
 });
 
-// 🔔 BİLDİRİM LİSTEYE EKLE
-const bugun = new Date().toLocaleDateString("tr-TR");
-
-
-
-const liste = eski ? JSON.parse(eski) : [];
-
-liste.push(yeniBildirim);
-
-
-
-
 /* HİZMET EHLİ */
 app.get("/hizmet-ehli", async (req, res) => {
   try {
@@ -68,11 +57,11 @@ app.get("/hizmet-ehli", async (req, res) => {
   }
 });
 
-/* GÜNLÜK BAĞIŞ (TARİHLİ + ÇİFT TOPLAMA DÜZELTİLDİ) */
+/* GÜNLÜK BAĞIŞ */
 app.get("/gunluk/:isim", async (req, res) => {
   try {
     const { isim } = req.params;
-    const { tarih } = req.query; // ?tarih=18.02.2026 şeklinde gelebilir
+    const { tarih } = req.query;
 
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
@@ -81,7 +70,6 @@ app.get("/gunluk/:isim", async (req, res) => {
 
     const rows = r.data.values || [];
 
-    // Eğer tarih query gelmezse BUGÜN kullan
     let seciliTarih;
 
     if (tarih) {
@@ -107,45 +95,39 @@ app.get("/gunluk/:isim", async (req, res) => {
       return Number.isFinite(n) ? n : 0;
     };
 
-const sonuc = {};
+    const sonuc = {};
 
-rows.forEach(row => {
+    rows.forEach(row => {
+      const rowTarih = norm(row[0]);
+      const yardimAlan = norm(row[1]);
+      const nevi = norm(row[2]);
+      const tutar = parseTutar(row[6]);
 
-  const rowTarih = norm(row[0]);
-  const yardimAlan = norm(row[1]);
-  const nevi = norm(row[2]);
-  const tutar = parseTutar(row[6]);
+      if (rowTarih !== seciliTarih) return;
+      if (yardimAlan !== norm(isim)) return;
+      if (!nevi) return;
 
-  if (rowTarih !== seciliTarih) return;
-  if (yardimAlan !== norm(isim)) return;
-  if (!nevi) return;
+      if (!sonuc[nevi]) sonuc[nevi] = 0;
+      sonuc[nevi] += tutar;
+    });
 
-  if (!sonuc[nevi]) sonuc[nevi] = 0;
-  sonuc[nevi] += tutar;
-});
+    let toplam = 0;
+    for (let key in sonuc) {
+      if (typeof sonuc[key] === "number") {
+        toplam += sonuc[key];
+      }
+    }
 
-// TOPLAM güvenli hesaplama
-let toplam = 0;
+    sonuc.TOPLAM = toplam;
 
-for (let key in sonuc) {
-  if (typeof sonuc[key] === "number") {
-    toplam += sonuc[key];
-  }
-}
-
-sonuc.TOPLAM = toplam;
-
-res.json(sonuc);
-
+    res.json(sonuc);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Günlük veri alınamadı" });
   }
 });
 
-
-/* 🔥 DASHBOARD (ÇİFT TOPLAMA DÜZELTİLDİ) */
+/* DASHBOARD */
 app.get("/dashboard", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
@@ -176,7 +158,7 @@ app.get("/dashboard", async (req, res) => {
   }
 });
 
-
+/* BAĞIŞ EKLEME */
 app.post("/bagislar", async (req, res) => {
   try {
     const {
@@ -212,7 +194,6 @@ app.post("/bagislar", async (req, res) => {
     res.json({ ok: true });
 
   } catch (err) {
-    console.error("POST HATA:", err);
     res.status(500).json({ error: "Bağış eklenemedi" });
   }
 });
@@ -236,11 +217,9 @@ app.get("/hedefler", async (req, res) => {
     );
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Hedefler alınamadı" });
   }
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
