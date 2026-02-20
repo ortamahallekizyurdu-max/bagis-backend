@@ -44,12 +44,12 @@ app.get("/duyurular", async (req, res) => {
 const bugun = new Date().toLocaleDateString("tr-TR");
 
 
-const eski = await AsyncStorage.getItem("BILDIRIM_LISTE");
+
 const liste = eski ? JSON.parse(eski) : [];
 
 liste.push(yeniBildirim);
 
-await AsyncStorage.setItem("BILDIRIM_LISTE", JSON.stringify(liste));
+
 
 
 /* HİZMET EHLİ */
