@@ -24,7 +24,7 @@ app.get("/duyurular", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: "Sayfa6!A2:A"
+      range: "Sayfa3!A2:A"
     });
 
     const rows = r.data.values || [];
