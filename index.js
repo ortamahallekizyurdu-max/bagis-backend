@@ -24,7 +24,7 @@ app.get("/duyurular", async (req, res) => {
   try {
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: "Sayfa3!A2:A"
+      range: "Sayfa3!B2:B"
     });
 
     const rows = r.data.values || [];
@@ -43,11 +43,6 @@ app.get("/duyurular", async (req, res) => {
 // 🔔 BİLDİRİM LİSTEYE EKLE
 const bugun = new Date().toLocaleDateString("tr-TR");
 
-const yeniBildirim = {
-  tarih: bugun,
-  isim: ad,
-  tutar: tutar
-};
 
 const eski = await AsyncStorage.getItem("BILDIRIM_LISTE");
 const liste = eski ? JSON.parse(eski) : [];
