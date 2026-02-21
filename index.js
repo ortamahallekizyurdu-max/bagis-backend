@@ -110,7 +110,7 @@ app.get("/gunluk/:isim", async (req, res) => {
       const gun = String(today.getDate()).padStart(2, "0");
       const ay = String(today.getMonth() + 1).padStart(2, "0");
       const yil = today.getFullYear();
-      seciliTarih = `${gun}.${ay}.${yil}`;
+      seciliTarih = ${gun}.${ay}.${yil};
     }
 
     const norm = (x) => String(x || "").trim();
