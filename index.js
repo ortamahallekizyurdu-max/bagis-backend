@@ -6,8 +6,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+/* GOOGLE AUTH */
 const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-const SPREADSHEET_ID = "1TLELlXiZVlT9wacbbCKXM6gJkjzsj4C18ls8HzOmsI8";
 
 const auth = new google.auth.GoogleAuth({
   credentials: serviceAccount,
@@ -16,10 +16,41 @@ const auth = new google.auth.GoogleAuth({
 
 const sheets = google.sheets({ version: "v4", auth });
 
+const SPREADSHEET_ID = "1TLELlXiZVlT9wacbbCKXM6gJkjzsj4C18ls8HzOmsI8";
+/* SERVER OK */
 app.get("/", (req, res) => {
   res.send("Server OK");
 });
 
+/* LOGIN */
+
+app.post("/login", async (req, res) => {
+  console.log("LOGIN İSTEĞİ GELDİ");
+  try {
+    const { sifre } = req.body;
+    console.log("GELEN ŞİFRE:", sifre);
+
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sayfa6!B1",
+    });
+
+    console.log("SHEET CEVAP:", r.data);
+
+    const sheetSifre = r.data.values?.[0]?.[0];
+    console.log("SHEET ŞİFRE:", sheetSifre);
+
+    if (sifre === sheetSifre) {
+      return res.json({ ok: true });
+    }
+
+    res.status(401).json({ ok: false });
+
+  } catch (err) {
+    console.log("LOGIN HATA DETAY:", err);
+    res.status(500).json({ ok: false });
+  }
+});
 /* DUYURULAR */
 app.get("/duyurular", async (req, res) => {
   try {
@@ -113,9 +144,7 @@ app.get("/gunluk/:isim", async (req, res) => {
 
     let toplam = 0;
     for (let key in sonuc) {
-      if (typeof sonuc[key] === "number") {
-        toplam += sonuc[key];
-      }
+      toplam += sonuc[key];
     }
 
     sonuc.TOPLAM = toplam;
