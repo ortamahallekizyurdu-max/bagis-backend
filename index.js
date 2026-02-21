@@ -51,26 +51,7 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
-/* DUYURULAR */
-app.get("/duyurular", async (req, res) => {
-  try {
-    const r = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: "Sayfa3!B2:B"
-    });
 
-    const rows = r.data.values || [];
-
-    res.json(
-      rows.map(row => ({
-        mesaj: row[0]
-      }))
-    );
-
-  } catch (err) {
-    res.status(500).json({ error: "Duyuru alınamadı" });
-  }
-});
 
 /* HİZMET EHLİ */
 app.get("/hizmet-ehli", async (req, res) => {
@@ -110,7 +91,7 @@ app.get("/gunluk/:isim", async (req, res) => {
       const gun = String(today.getDate()).padStart(2, "0");
       const ay = String(today.getMonth() + 1).padStart(2, "0");
       const yil = today.getFullYear();
-      seciliTarih = ${gun}.${ay}.${yil};
+      seciliTarih = `${gun}.${ay}.${yil}`;
     }
 
     const norm = (x) => String(x || "").trim();
@@ -253,4 +234,25 @@ app.get("/hedefler", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("🚀 Server çalışıyor");
+});
+
+/* DUYURULAR */
+app.get("/duyurular", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sayfa3!B2:B"
+    });
+
+    const rows = r.data.values || [];
+
+    res.json(
+      rows.map(row => ({
+        mesaj: row[0]
+      }))
+    );
+
+  } catch (err) {
+    res.status(500).json({ error: "Duyuru alınamadı" });
+  }
 });
