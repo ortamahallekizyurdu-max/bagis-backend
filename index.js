@@ -8,6 +8,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cors({ origin: '*' }));
 
 /* GOOGLE AUTH */
 const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT || `{
@@ -91,14 +92,49 @@ app.get("/gunluk/:isim", async (req, res) => {
   }
 });
 
-/* DASHBOARD */
-app.get("/dashboard", async (req,res)=>{
+/* DASHBOARD - Bağış Nevîsi Bazlı Yüzdelik */
+/* DASHBOARD - Yardım Alan + Bağış Nevîsi + TOPLAM + Yüzdelik */
+app.get("/dashboard", async (req, res) => {
   try {
-    const r = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "Sayfa4!A2:H" });
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sayfa4!A2:M" // Görseldeki tablo aralığı
+    });
+
     const rows = r.data.values || [];
-    const sonuc = rows.map(row=>({tarih:row[0]||"",isim:row[1]||"",nevi:row[2]||"",tutar:Number(String(row[6]||0).replace(/\./g,"").replace(",", "."))}));
-    res.json(sonuc);
-  } catch { res.status(500).json({error:"Dashboard verisi alınamadı"}); }
+    const parseTutar = x => Number(String(x || "").replace(/\./g,"").replace(",",".") || 0);
+
+    const dashboardMap = {};
+
+    rows.forEach(row => {
+      const nevî = row[1] || ""; // FAALİY sütunu (B)
+      const yardimAlan = row[2] || ""; // AD sütunu (C)
+      const topl = parseTutar(row[11]); // TOPLAM sütunu (L)
+      const hedef = parseTutar(row[12]); // HEDEF sütunu (M)
+
+      if (!yardimAlan || !nevî) return;
+
+      if (!dashboardMap[yardimAlan]) dashboardMap[yardimAlan] = { neviler: {}, TOPLAM: 0 };
+      dashboardMap[yardimAlan].neviler[nevî] = {
+        toplanan: topl,
+        hedef: hedef,
+        yuzde: hedef ? Math.round((topl / hedef) * 1000) / 10 : 0 // 1 ondalık
+      };
+      dashboardMap[yardimAlan].TOPLAM += topl;
+    });
+
+    const dashboardSonuc = Object.keys(dashboardMap).map(alan => ({
+      yardimAlan: alan,
+      neviler: dashboardMap[alan].neviler,
+      TOPLAM: dashboardMap[alan].TOPLAM
+    }));
+
+    res.json(dashboardSonuc);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Dashboard verisi alınamadı" });
+  }
 });
 
 /* BAĞIŞ EKLEME */
