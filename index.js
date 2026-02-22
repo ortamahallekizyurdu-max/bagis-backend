@@ -246,13 +246,41 @@ app.get("/duyurular", async (req, res) => {
 
     const rows = r.data.values || [];
 
-    res.json(
-      rows.map(row => ({
-        mesaj: row[0]
-      }))
-    );
+    res.json(rows.map(row => ({ mesaj: row[0] })));
 
   } catch (err) {
     res.status(500).json({ error: "Duyuru alınamadı" });
   }
+});
+
+/* IFTAR LİSTESİ */
+app.get("/iftar-listesi", async (req, res) => {
+  try {
+    const r = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "IFTAR!A2:F"
+    });
+
+    const rows = r.data.values || [];
+
+    res.json(
+      rows.map(row => ({
+        tarih: row[0] || "",
+        iftarSahibi: row[1] || "",
+        vesile: row[2] || "",
+        erkek: row[3] || "0",
+        hanim: row[4] || "0",
+        tutar: row[5] || "0",
+      }))
+    );
+
+  } catch (err) {
+    console.log("IFTAR HATA:", err);
+    res.status(500).json({ error: "İftar listesi alınamadı" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("🚀 Server çalışıyor");
 });
