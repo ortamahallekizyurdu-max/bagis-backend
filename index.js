@@ -231,9 +231,6 @@ app.get("/hedefler", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log("🚀 Server çalışıyor");
-});
 
 /* DUYURULAR */
 app.get("/duyurular", async (req, res) => {
